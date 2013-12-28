@@ -47,6 +47,15 @@ class AutoDownloadProfile(webdriver.FirefoxProfile):
         assert self.tmpdir.startswith('/tmp/')
         shutil.rmtree(self.tmpdir)
 
+class Entry(object):
+    def __init__(self, entry_date, interest_date, description,
+                       amount, balance): 
+        self.entry_date = entry_date
+        self.interest_date = interest_date
+        self.description = description
+        self.amount = amount
+        self.balance = balance
+
 class SparNord(object):
     FRONT_PAGE = 0
     SIMPLE_LOGIN_PAGE = 1
@@ -68,6 +77,7 @@ class SparNord(object):
         self.current_agreement = None
         self.agreement_id = agreement_id
         self.user_id = user_id
+        self.xtst = None
 
     def get_browser(self):
         browser = webdriver.Firefox(self.profile)
@@ -134,26 +144,27 @@ class SparNord(object):
                      '\t': 'Tab',
                      '\n': 'Return'}
 
-    def send_key(self, xtst, c):
+    def send_key(self, c):
+        if self.xtst is None:
+            self.xtst = xtest.XTest(os.environ['DISPLAY'])
         if c in self.key_event_map:
-            xtst.fakeKeyEvent(self.key_event_map[c])
+            self.xtst.fakeKeyEvent(self.key_event_map[c])
         else:
-            xtst.fakeKeyEvent(c)
+            self.xtst.fakeKeyEvent(c)
 
     def goto_agreement_choice_page(self):
         if self.page < self.SIMPLE_LOGIN_PAGE:
             self.goto_simple_login_page()
 
-            xtst = xtest.XTest(os.environ['DISPLAY'])
             for c in self.username:
-                self.send_key(xtst, c)
+                self.send_key(c)
                 time.sleep(0.1)
-            xtst.fakeKeyEvent('\t')
+            self.send_key('\t')
             time.sleep(0.1)
             for c in self.password:
-                self.send_keys(xtst, c)
+                self.send_key(c)
                 time.sleep(0.1)
-            xtst.fakeKeyEvent('\n')
+            self.send_key('\n')
 
             time.sleep(2)
 
@@ -175,31 +186,36 @@ class SparNord(object):
         elem.click()
 
     def goto_account_overview(self):
-        if self.page == self.ACCOUNT_OVERVIEW_PAGE:
-            if self.agreement_id == self.current_agreement:
+        if not self.multi_aftale or (self.agreement_id and (self.agreement_id == self.current_agreement)):
+            if self.page == self.ACCOUNT_OVERVIEW_PAGE:
+                return
+            elif self.page > self.ACCOUNT_OVERVIEW_PAGE:
+                self.find_and_click_link('KONTI')
+                self.page = self.ACCOUNT_OVERVIEW_PAGE
                 return
 
-        if self.page != self.ACCOUNT_OVERVIEW_PAGE:
-            # Det her var af en eller anden grund skrøbeligt
-            attempts_left = 3
-            while attempts_left:
-                try:
-                    self.goto_agreement_choice_page()
-                    if self.multi_aftale:
-                        if not self.agreement_id:
+        # Det her var af en eller anden grund skrøbeligt
+        attempts_left = 3
+        while attempts_left:
+            try:
+                self.goto_agreement_choice_page()
+                if self.multi_aftale:
+                    if not self.agreement_id:
                             raise AgreementIdRequired("You must set the agreement ID to go to the accounts overview page")
-                        self.find_and_click_link(self.agreement_id)
-                    break
-                except IndexError:
-                    if attempts_left == 1:
-                        raise
-                    attempts_left -= 1
-            self.find_and_click_link('KONTI')
-            self.page = self.ACCOUNT_OVERVIEW_PAGE
+                    self.find_and_click_link(self.agreement_id)
+                    self.current_agreement = self.agreement_id
+                break
+            except IndexError:
+                if attempts_left == 1:
+                    raise
+                attempts_left -= 1
+        self.find_and_click_link('KONTI')
+        self.page = self.ACCOUNT_OVERVIEW_PAGE
 
     def goto_account_details(self, account):
         self.goto_account_overview()
         self.find_and_click_link(account)
+        self.page = self.ACCOUNT_DETAILS_PAGE
 
     def get_account_info_csv(self, account, from_date=None, to_date=None):
         self.goto_account_details(account)
@@ -250,7 +266,11 @@ class SparNord(object):
             with open(csvfile, 'r') as fp:
                 retval = fp.read() + retval
                 LOG.debug("Retval is now: %s" % (retval,))
-                return retval
+            for row in latin1_csv_reader(retval.split("\n")):
+                if not row:
+                    continue
+                yield Entry(parse_date(row[0]), parse_date(row[1]),
+                            row[2], parse_amount(row[3]), parse_amount(row[4]))
         finally:
             os.unlink(csvfile)
 
