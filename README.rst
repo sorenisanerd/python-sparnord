@@ -1,4 +1,5 @@
-# SparNord
+SparNord
+########
 
 python-sparnord er et værktøj, der giver dig programmatisk adgang til Spar Nords netbank.
 I al sin gribende enkelhed lader det dig hive dine kontoudtog ud.
