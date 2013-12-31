@@ -181,7 +181,9 @@ class SparNord(object):
 
     def find_and_click_link(self, partial_link_text):
         LOG.debug('Looking for a link that reads %s.' % partial_link_text)
-        elem = self.browser.find_elements_by_partial_link_text(partial_link_text)[0]
+        elems = self.browser.find_elements_by_partial_link_text(partial_link_text)
+        LOG.debug('Found %d' % (len(elems),))
+        elem = elems[0]
         LOG.debug('Found. Clicking it.')
         elem.click()
 
