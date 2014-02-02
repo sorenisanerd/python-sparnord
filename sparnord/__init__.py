@@ -230,6 +230,7 @@ class SparNord(object):
                 elem.send_keys(from_date)
             if to_date:
                 elem = self.browser.find_elements_by_css_selector('input#activityPeriodsTo')[0]
+                elem.clear()
                 elem.send_keys(to_date)
             imgs = self.browser.find_elements_by_css_selector('form#accountActivitiesForm a img')
             img = filter(lambda x:x.get_attribute('src').endswith('knap_ok'), imgs)[0]
