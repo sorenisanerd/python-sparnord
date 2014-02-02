@@ -257,7 +257,7 @@ class SparNord(object):
                         databuf = fp.read()
                     datalines = databuf.split("\n")
                     datalines.reverse()
-                    for row in latin1_csv_reader(datalines.split("\n")):
+                    for row in latin1_csv_reader(datalines):
                         if not row:
                             continue
                         yield Entry(parse_date(row[0]), parse_date(row[1]),
@@ -279,7 +279,7 @@ class SparNord(object):
                 databuf = fp.read()
             datalines = databuf.split("\n")
             datalines.reverse()
-            for row in latin1_csv_reader(datalines.split("\n")):
+            for row in latin1_csv_reader(datalines):
                 if not row:
                     continue
                 yield Entry(parse_date(row[0]), parse_date(row[1]),
