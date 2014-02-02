@@ -10,6 +10,7 @@ import tempfile
 import shutil
 import xtest
 from selenium import webdriver
+from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.common.keys import Keys
 
 LOG = logging.getLogger(__name__)
@@ -180,12 +181,14 @@ class SparNord(object):
                 self.page = self.AGREEMENT_CHOICE_PAGE
 
     def find_and_click_link(self, partial_link_text):
+        WebDriverWait(self.browser, 20).until(lambda d: d.execute_script('return document.readyState') == 'complete')
         LOG.debug('Looking for a link that reads %s.' % partial_link_text)
         elems = self.browser.find_elements_by_partial_link_text(partial_link_text)
         LOG.debug('Found %d' % (len(elems),))
         elem = elems[0]
         LOG.debug('Found. Clicking it.')
         elem.click()
+        WebDriverWait(self.browser, 20).until(lambda d: d.execute_script('return document.readyState') == 'complete')
 
     def goto_account_overview(self):
         if not self.multi_aftale or (self.agreement_id and (self.agreement_id == self.current_agreement)):
@@ -250,8 +253,14 @@ class SparNord(object):
                 try:
                     LOG.debug("It's there now")
                     with open(csvfile, 'r') as fp:
-                        retval = fp.read() + retval
-                    LOG.debug("Retval is now: %s" % (retval, ))
+                        databuf = fp.read()
+                    datalines = databuf.split("\n")
+                    datalines.reverse()
+                    for row in latin1_csv_reader(datalines.split("\n")):
+                        if not row:
+                            continue
+                        yield Entry(parse_date(row[0]), parse_date(row[1]),
+                                    row[2], parse_amount(row[3]), parse_amount(row[4]))
                 finally:
                     LOG.debug("Deleting it")
                     os.unlink(csvfile)
@@ -266,9 +275,10 @@ class SparNord(object):
         try:
             LOG.debug("It's there now")
             with open(csvfile, 'r') as fp:
-                retval = fp.read() + retval
-                LOG.debug("Retval is now: %s" % (retval,))
-            for row in latin1_csv_reader(retval.split("\n")):
+                databuf = fp.read()
+            datalines = databuf.split("\n")
+            datalines.reverse()
+            for row in latin1_csv_reader(datalines.split("\n")):
                 if not row:
                     continue
                 yield Entry(parse_date(row[0]), parse_date(row[1]),
