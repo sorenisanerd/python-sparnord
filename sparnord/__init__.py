@@ -245,7 +245,7 @@ class SparNord(object):
             while len(self.browser.find_elements_by_partial_link_text('Vis flere')) > 0:
                 self.find_and_click_link('Eksporter')
                 menu = self.browser.find_element_by_id('menu000')
-                if menu and menu.isDisplayed():
+                if menu and menu.is_displayed():
                     self.browser.find_element_by_css_selector('#move > a:nth-child(1)').click()
 
                 csvfile = os.path.join(self.profile.tmpdir, 'export.csv')
@@ -271,7 +271,7 @@ class SparNord(object):
 
         self.find_and_click_link('Eksporter')
         menu = self.browser.find_element_by_id('menu000')
-        if menu and menu.isDisplayed():
+        if menu and menu.is_displayed():
             self.browser.find_element_by_css_selector('#move > a:nth-child(1)').click()
         csvfile = os.path.join(self.profile.tmpdir, 'export.csv')
         LOG.debug('Checking to see if %s exists' % (csvfile,))
