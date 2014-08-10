@@ -244,6 +244,9 @@ class SparNord(object):
             LOG.debug('There is! Entering the loop')
             while len(self.browser.find_elements_by_partial_link_text('Vis flere')) > 0:
                 self.find_and_click_link('Eksporter')
+                if self.browser.find_element_by_id('menu000'):
+                    self.browser.find_element_by_css_selector('#move > a:nth-child(1)').click()
+
                 csvfile = os.path.join(self.profile.tmpdir, 'export.csv')
                 LOG.debug('Checking to see if %s exists' % (csvfile,))
                 while not os.path.exists(csvfile):
@@ -266,6 +269,8 @@ class SparNord(object):
                 self.find_and_click_link('Vis flere')
 
         self.find_and_click_link('Eksporter')
+        if self.browser.find_element_by_id('menu000'):
+            self.browser.find_element_by_css_selector('#move > a:nth-child(1)').click()
         csvfile = os.path.join(self.profile.tmpdir, 'export.csv')
         LOG.debug('Checking to see if %s exists' % (csvfile,))
         while not os.path.exists(csvfile):
