@@ -186,7 +186,7 @@ class SparNord(object):
             LOG.debug('Found %d' % (len(elems),))
             if elems:
                 break
-            time.sleep(1000)
+            time.sleep(1)
             timeout -= 1
         elem = elems[0]
         LOG.debug('Found. Clicking it.')
