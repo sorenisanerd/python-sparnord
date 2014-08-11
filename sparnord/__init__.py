@@ -178,11 +178,16 @@ class SparNord(object):
                 self.find_and_click_link('Skift aftale')
                 self.page = self.AGREEMENT_CHOICE_PAGE
 
-    def find_and_click_link(self, partial_link_text):
+    def find_and_click_link(self, partial_link_text, timeout=10):
 #        WebDriverWait(self.browser, 20).until(lambda d: d.execute_script('return document.readyState') == 'complete')
         LOG.debug('Looking for a link that reads %s.' % partial_link_text)
-        elems = self.browser.find_elements_by_partial_link_text(partial_link_text)
-        LOG.debug('Found %d' % (len(elems),))
+        while timeout:
+            elems = self.browser.find_elements_by_partial_link_text(partial_link_text)
+            LOG.debug('Found %d' % (len(elems),))
+            if elems:
+                break
+            time.sleep(1000)
+            timeout -= 1
         elem = elems[0]
         LOG.debug('Found. Clicking it.')
         elem.click()
